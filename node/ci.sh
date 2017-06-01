@@ -1,0 +1,1 @@
+# TODO: bash helper script for building node c++ addons on travis/circle
