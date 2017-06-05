@@ -16,6 +16,13 @@ node -e "console.log(process.argv,process.execPath)"
 ECHO available npm^:
 where npm
 CALL npm -v
+IF NOT "%nodejs_version:~0,1%"=="8" GOTO AFTER_DOWNGRADE_NPM
+ECHO downgrading npm ...
+CALL npm install --global npm@3
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+where npm
+CALL npm -v
+:AFTER_DOWNGRADE_NPM
 ECHO installing ....
 CALL npm install --msvs_version=2015
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
