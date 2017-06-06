@@ -15,14 +15,12 @@ IF /I "%PLATFORM%"=="x64" set PATH=C:\Python27-x64;%PATH%
 :: node-gdal node@8.0.0 builds fail with (other cpp modules seem to work with node@8.0 as is):
 :: gyp: Call to 'node -e "require('nan')"' returned exit status 1 while in binding.gyp. while trying to load binding.gyp
 :: https://ci.appveyor.com/project/brianreavis/node-gdal/build/701/job/6xx88uisj1beap0f#L712
-IF NOT "%APPVEYOR_REPO_NAME%"=="naturalatlas/node-gdal" GOTO AFTER_DOWNGRADE_NPM
-IF NOT "%nodejs_version:~0,1%"=="8" GOTO AFTER_DOWNGRADE_NPM
-ECHO downgrading npm ...
-CALL npm install --global npm@3
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-where npm
-CALL npm -v
-:AFTER_DOWNGRADE_NPM
+:: IF NOT "%APPVEYOR_REPO_NAME%"=="naturalatlas/node-gdal" GOTO AFTER_DOWNGRADE_NPM
+:: IF NOT "%nodejs_version:~0,1%"=="8" GOTO AFTER_DOWNGRADE_NPM
+:: ECHO downgrading npm ...
+:: CALL npm install --global npm@3
+:: IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+:: :AFTER_DOWNGRADE_NPM
 
 IF /I "%PLATFORM%"=="x86" (IF /I "%nodejs_version:~0,1%"=="4" (GOTO SET_CA_FILE) ELSE (GOTO AFTER_CA_FILE_FIX)) ELSE (GOTO AFTER_CA_FILE_FIX)
 :SET_CA_FILE
