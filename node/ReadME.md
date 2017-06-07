@@ -21,9 +21,9 @@ https://www.appveyor.com/docs/build-configuration/#alternative-yaml-file-locatio
 
 ### js-only
 
-use raw url to [`node/appveyor.yml.js.txt`](node/appveyor.yml.js.txt), eg.: https://github.com/mapbox/ci-scripts/raw/master/node/appveyor.yml.js.txt
+use raw url to [`appveyor.yml.js.txt`](appveyor.yml.js.txt), eg.: https://github.com/mapbox/ci-scripts/raw/master/node/appveyor.yml.js.txt
 
 ### cpp
 
-use raw url to [`node/appveyor.yml.cpp.txt`](node/appveyor.yml.cpp.txt), eg.: https://github.com/mapbox/ci-scripts/raw/master/node/appveyor.yml.cpp.txt
+use raw url to [`appveyor.yml.cpp.txt`](appveyor.yml.cpp.txt), eg.: https://github.com/mapbox/ci-scripts/raw/master/node/appveyor.yml.cpp.txt
 
