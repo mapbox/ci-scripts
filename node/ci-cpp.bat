@@ -22,8 +22,8 @@ CALL npm install --global npm@3
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 :AFTER_DOWNGRADE_NPM
 
-IF /I "%PLATFORM%"=="x86" (IF /I "%nodejs_version:~0,1%"=="4" (GOTO SET_CA_FILE) ELSE (GOTO AFTER_CA_FILE_FIX)) ELSE (GOTO AFTER_CA_FILE_FIX)
-:SET_CA_FILE
+IF /I NOT "%PLATFORM%"=="x86" GOTO AFTER_CA_FILE_FIX
+IF /I NOT "%nodejs_version:~0,1%"=="4" GOTO AFTER_CA_FILE_FIX
 ECHO workaround node 4.x x86 bug by setting 'cafile' and 'strict-ssl'
 :: HACK!! to make node@4.x x86 builds work
 :: see: https://github.com/mapbox/node-pre-gyp/issues/209#issuecomment-217690537
@@ -50,18 +50,9 @@ CALL npm test
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO APPVEYOR_REPO_COMMIT_MESSAGE^: %APPVEYOR_REPO_COMMIT_MESSAGE%
 SET CM=%APPVEYOR_REPO_COMMIT_MESSAGE%
-IF NOT "%CM%"=="%CM:[publish binary]=%" (CALL node_modules\.bin\node-pre-gyp package publish) ELSE (ECHO not publishing)
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-IF NOT "%CM%"=="%CM:[republish binary]=%" (CALL node_modules\.bin\node-pre-gyp package unpublish publish) ELSE (ECHO not republishing)
-IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO packaging ...
 CALL node_modules\.bin\node-pre-gyp package
 IF %ERRORLEVEL% NEQ 0 ECHO error during packaging && GOTO ERROR
-:: publish binaries to default path
-:: in the future this may change depending on:
-:: 1) what visual studio versions we support
-:: 2) how visual studio binaries are or are not compatible with each other
-:: more details: https://github.com/mapnik/node-mapnik/issues/756
 IF NOT "%CM%" == "%CM:[publish binary]=%" (ECHO publishing... && CALL node_modules\.bin\node-pre-gyp publish) ELSE (ECHO not publishing)
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 IF NOT "%CM%" == "%CM:[republish binary]=%" (ECHO republishing ... && CALL node_modules\.bin\node-pre-gyp unpublish publish) ELSE (ECHO not republishing)
