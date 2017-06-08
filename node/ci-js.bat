@@ -24,7 +24,7 @@ where npm
 CALL npm -v
 :AFTER_DOWNGRADE_NPM
 ECHO installing ....
-CALL npm install --msvs_version=2015
+CALL npm install
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO testing ...
 CALL npm test
