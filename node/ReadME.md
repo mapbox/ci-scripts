@@ -27,3 +27,14 @@ use raw url (**including the tag**) to [`appveyor.yml.js.txt`](appveyor.yml.js.t
 
 use raw url (**including the tag**) to [`appveyor.yml.cpp.txt`](appveyor.yml.cpp.txt), eg.: https://github.com/mapbox/ci-scripts/raw/v1.0.0/node/appveyor.yml.cpp.txt
 
+### publishing for a single node version
+
+This is a bit more complicated than before because scripts here apply to all modules that use them.
+
+Procedure:
+* On Appveyor `project -> settings -> general -> Custom configuration .yml file name` remove link to `ci-scripts` 
+* Download appropriate `yml` into a branch of the module
+* Change build matrix in `appveyor.yml` to just included the desired node version
+* Commit with `[publish binary]`
+* Remove branch again
+* **Revert project settings on AppVeyor: insert the link to `ci-scripts` again (`project -> settings -> general -> Custom configuration .yml file name`)**
