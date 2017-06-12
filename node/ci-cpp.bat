@@ -6,6 +6,19 @@ SET EL=0
 
 ECHO =========== %~f0 ===========
 
+:: only set '--toolset=' if msvs_toolset=14 was explicitly passed in
+IF /I "%msvs_toolset%"=="14" SET TOOLSET=--toolset=v140
+:: default to VS2015
+IF /I "%msvs_toolset%"=="" SET msvs_toolset=14
+SET VCVARSALL=C:\Program Files (x86)\Microsoft Visual Studio %msvs_toolset%.0\VC\vcvarsall.bat
+IF /I "%msvs_toolset%"=="14" SET MSVSVERSION=2015
+IF /I "%msvs_toolset%"=="12" SET MSVSVERSION=2013
+
+ECHO TOOLSET^: %TOOLSET%
+ECHO msvs_toolset^: %msvs_toolset%
+ECHO MSVSVERSION^: %MSVSVERSION%
+ECHO VCVARSALL^: "%VCVARSALL%"
+
 IF /I "%APPVEYOR%"=="True" powershell Install-Product node %nodejs_version% %PLATFORM%
 IF %ERRORLEVEL% NEQ 0 ECHO could not install requested node version && GOTO ERROR
 
@@ -22,18 +35,22 @@ CALL npm install --global npm@3
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 :AFTER_DOWNGRADE_NPM
 
-IF /I NOT "%PLATFORM%"=="x86" GOTO AFTER_CA_FILE_FIX
-IF /I NOT "%nodejs_version:~0,1%"=="4" GOTO AFTER_CA_FILE_FIX
-ECHO workaround node 4.x x86 bug by setting 'cafile' and 'strict-ssl'
 :: HACK!! to make node@4.x x86 builds work
 :: see: https://github.com/mapbox/node-pre-gyp/issues/209#issuecomment-217690537
 :: be careful when doing this locally as it might have unwanted side effects
+IF /I NOT "%PLATFORM%"=="x86" GOTO AFTER_CA_FILE_FIX
+IF /I NOT "%nodejs_version:~0,1%"=="4" GOTO AFTER_CA_FILE_FIX
+ECHO workaround node 4.x x86 bug by setting 'cafile' and 'strict-ssl'
 CALL npm config set -g cafile=package.json
 CALL npm config set -g strict-ssl=false
 :AFTER_CA_FILE_FIX
+
+
 ECHO activating VS command prompt...
-IF /I %platform% == x64 CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
-IF /I %platform% == x86 CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
+ECHO "%VCVARSALL%"
+IF /I %platform% == x64 CALL "%VCVARSALL%" amd64
+IF /I %platform% == x86 CALL "%VCVARSALL%" x86
+
 ECHO available node.exe^:
 where node
 node -v
@@ -43,7 +60,7 @@ where npm
 CALL npm -v
 ECHO building ...
 :: --msvs_version=2015 is passed along to node-gyp here
-CALL npm install --build-from-source --msvs_version=2015 --loglevel=http --node_shared=true
+CALL npm install --build-from-source --msvs_version=%MSVSVERSION% %TOOLSET% --loglevel=http --node_shared=true
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 CALL npm test
 :: comment next line to allow build to work even if tests do not pass
@@ -51,11 +68,11 @@ IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 ECHO APPVEYOR_REPO_COMMIT_MESSAGE^: %APPVEYOR_REPO_COMMIT_MESSAGE%
 SET CM=%APPVEYOR_REPO_COMMIT_MESSAGE%
 ECHO packaging ...
-CALL node_modules\.bin\node-pre-gyp package
+CALL node_modules\.bin\node-pre-gyp package %TOOLSET%
 IF %ERRORLEVEL% NEQ 0 ECHO error during packaging && GOTO ERROR
-IF NOT "%CM%" == "%CM:[publish binary]=%" (ECHO publishing... && CALL node_modules\.bin\node-pre-gyp publish) ELSE (ECHO not publishing)
+IF NOT "%CM%" == "%CM:[publish binary]=%" (ECHO publishing... && CALL node_modules\.bin\node-pre-gyp publish %TOOLSET%) ELSE (ECHO not publishing)
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-IF NOT "%CM%" == "%CM:[republish binary]=%" (ECHO republishing ... && CALL node_modules\.bin\node-pre-gyp unpublish publish) ELSE (ECHO not republishing)
+IF NOT "%CM%" == "%CM:[republish binary]=%" (ECHO republishing ... && CALL node_modules\.bin\node-pre-gyp unpublish publish %TOOLSET%) ELSE (ECHO not republishing)
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 GOTO DONE
 :ERROR
