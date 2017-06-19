@@ -1,40 +1,51 @@
 # AppVeyor
 
-AppVeyor let's you keep `appveyor.yml` outside of the repo.
+'appveyor.yml`s of each repository should contain the absolute minimum of information/processing necessary.
+eg.: just build matrix and environment variables needed for building/publishing.
 
-Enter rawl url to `appveyor.yml` into:
+All builds should download the centralised **versioned** build scripts of this repository and then execute them, eg.:
 
+```yml
+install:
+  - ps: Start-FileDownload 'https://github.com/mapbox/ci-scripts/raw/v1.1.0/node/ci-js.bat' -FileName ci.bat
+  - CALL ci.bat
+
+build: OFF
+test: OFF
+deploy: OFF
 ```
-project -> settings -> general -> Custom configuration .yml file name
+
+## js-only
+
+Use raw url (**including the tag/version**) to [`ci-js.bat`](ci-js.bat), eg.: https://github.com/mapbox/ci-scripts/raw/v1.1.0/node/ci-js.bat
+
+## cpp
+
+Use raw url (**including the tag/version**) to [`ci-cpp.bat`](ci-cpp.bat), eg.: https://github.com/mapbox/ci-scripts/raw/v1.1.0/node/ci-cpp.bat
+
+### build failures with `node@4 x86`
+
+`node@4 x86` builds kept failing with
+```
+gyp ERR! stack Error: ENOENT: no such file or directory, open 'C:\projects\node-pre-gyp\test\app1\undefined'
 ```
 
-Reference:
+We used to workaround that by changing npm settings for `cafile` which is a nasty hack and only usable for one time ci builds as it may interfere with npm functioning properly afterwards.
 
-https://www.appveyor.com/docs/build-configuration/#alternative-yaml-file-location
+**The correct way to solve this problem is to either run**
+```
+npm install node-gyp@3.6`
+```
+manually before building or put
+```
+"node-gyp": "^3.6.1"
+```
+into the `devDependencies` of the `package.json`.
 
+# publishing for a single node version
 
-> It is possible to keep YAML file outside of repository. For that place YAML file as a plain text (Content-Type: text/plain) and anonymously accessible at some HTTP (or HTTPS) location. If using some web hosting, let file has .txt extension for it to get correct content type. However better option is to use permalink to GitHub gist raw file, and take advantage of keeping file change history on GitHub. After that place URL to YAML file to Custom configuration .yml file name setting. Needless to say that secure variables should be used for secrets in YAML file.
-
-## node modules
-
-`yml`s download appropriate build script (`ci-cpp.bat` or `ci-js.bat`) themselves.
-
-### js-only
-
-use raw url (**including the tag**) to [`appveyor.yml.js.txt`](appveyor.yml.js.txt), eg.: https://github.com/mapbox/ci-scripts/raw/v1.0.0/node/appveyor.yml.js.txt
-
-### cpp
-
-use raw url (**including the tag**) to [`appveyor.yml.cpp.txt`](appveyor.yml.cpp.txt), eg.: https://github.com/mapbox/ci-scripts/raw/v1.0.0/node/appveyor.yml.cpp.txt
-
-### publishing for a single node version
-
-This is a bit more complicated than before because scripts here apply to all modules that use them.
 
 Procedure:
-* On Appveyor `project -> settings -> general -> Custom configuration .yml file name` remove link to `ci-scripts` 
-* Download appropriate `yml` into a branch of the module
-* Change build matrix in `appveyor.yml` to just included the desired node version
+* Change build matrix in `appveyor.yml` to just include the desired node version
 * Commit with `[publish binary]`
-* Remove branch again
-* **Revert project settings on AppVeyor: insert the link to `ci-scripts` again (`project -> settings -> general -> Custom configuration .yml file name`)**
+* Revert build matrix
