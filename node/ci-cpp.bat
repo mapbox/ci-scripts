@@ -35,17 +35,6 @@ CALL npm install --global npm@3
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 :AFTER_DOWNGRADE_NPM
 
-:: HACK!! to make node@4.x x86 builds work
-:: see: https://github.com/mapbox/node-pre-gyp/issues/209#issuecomment-217690537
-:: be careful when doing this locally as it might have unwanted side effects
-IF /I NOT "%PLATFORM%"=="x86" GOTO AFTER_CA_FILE_FIX
-IF /I NOT "%nodejs_version:~0,1%"=="4" GOTO AFTER_CA_FILE_FIX
-ECHO workaround node 4.x x86 bug by setting 'cafile' and 'strict-ssl'
-CALL npm config set -g cafile=package.json
-CALL npm config set -g strict-ssl=false
-:AFTER_CA_FILE_FIX
-
-
 ECHO activating VS command prompt...
 ECHO "%VCVARSALL%"
 IF /I %platform% == x64 CALL "%VCVARSALL%" amd64
